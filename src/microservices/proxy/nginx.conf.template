@@ -1,0 +1,22 @@
+upstream strangler_fig {
+${DISABLE_MONOLITH}   server ${MONOLITH_HOST_PORT} weight=${MONOLITH_MIGRATION_PERCENT};
+${DISABLE_MOVIES}   server ${MOVIES_SERVICE_HOST_PORT} weight=${MOVIES_MIGRATION_PERCENT};
+}
+
+server {
+    listen 8000;
+
+    location / {
+         proxy_pass ${MONOLITH_URL};
+    }
+
+    location /api/movies {
+        proxy_pass http://strangler_fig;
+    }
+
+    location /health {
+        default_type text/plain;
+
+        return 200 "{\"status\":true}";
+    }
+}
