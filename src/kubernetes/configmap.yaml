@@ -20,4 +20,4 @@ data:
   
   # Strangler Fig configuration
   GRADUAL_MIGRATION: "true"
-  MOVIES_MIGRATION_PERCENT: "100"
+  MOVIES_MIGRATION_PERCENT: "25"

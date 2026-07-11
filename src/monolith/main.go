@@ -45,6 +45,10 @@ type Subscription struct {
 	EndDate   time.Time `json:"end_date"`
 }
 
+const (
+	serverName = "monolith"
+)
+
 func main() {
 	// Initialize database connection
 	initDB()
@@ -86,11 +90,14 @@ func initDB() {
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Server-Name", serverName)
 	json.NewEncoder(w).Encode(map[string]bool{"status": true})
 }
 
 // User handlers
 func handleUsers(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("X-Server-Name", serverName)
+
 	switch r.Method {
 	case "GET":
 		if r.URL.Query().Get("id") != "" {
@@ -160,6 +167,8 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 
 // Movie handlers
 func handleMovies(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("X-Server-Name", serverName)
+
 	switch r.Method {
 	case "GET":
 		if r.URL.Query().Get("id") != "" {
@@ -291,6 +300,8 @@ func createMovie(w http.ResponseWriter, r *http.Request) {
 
 // Payment handlers
 func handlePayments(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("X-Server-Name", serverName)
+
 	switch r.Method {
 	case "GET":
 		if r.URL.Query().Get("id") != "" {
@@ -387,6 +398,8 @@ func createPayment(w http.ResponseWriter, r *http.Request) {
 
 // Subscription handlers
 func handleSubscriptions(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("X-Server-Name", serverName)
+
 	switch r.Method {
 	case "GET":
 		if r.URL.Query().Get("id") != "" {

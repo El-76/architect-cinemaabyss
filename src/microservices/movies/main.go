@@ -23,6 +23,10 @@ type Movie struct {
 	Rating      float64  `json:"rating"`
 }
 
+const (
+	serverName = "movies-service"
+)
+
 func main() {
 	// Initialize database connection
 	initDB()
@@ -62,11 +66,14 @@ func initDB() {
 
 func handleHealth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Server-Name", serverName)
 	json.NewEncoder(w).Encode(map[string]bool{"status": true})
 }
 
 // Movie handlers
 func handleMovies(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("X-Server-Name", serverName)
+
 	switch r.Method {
 	case "GET":
 		if r.URL.Query().Get("id") != "" {
