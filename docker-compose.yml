@@ -38,6 +38,8 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+    volumes:
+      - zookeeper_data:/opt/zookeeper-3.4.13/data/
 
   # Kafka
   kafka:
@@ -54,8 +56,10 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_CREATE_TOPICS: "movie-events:1:1,user-events:1:1,payment-events:1:1"
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_LOG_DIRS: "/kafka/kafka-logs"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - kafka_data:/kafka/
     networks:
       - cinemaabyss-network
     healthcheck:
@@ -157,6 +161,8 @@ services:
 
 volumes:
   postgres-data:
+  kafka_data:
+  zookeeper_data:
 
 networks:
   cinemaabyss-network:
