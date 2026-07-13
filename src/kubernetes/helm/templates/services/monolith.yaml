@@ -47,12 +47,14 @@ spec:
             port: {{ .Values.monolith.service.targetPort }}
           initialDelaySeconds: 5
           periodSeconds: 10
+          timeoutSeconds: 60
         livenessProbe:
           httpGet:
             path: /api/users
             port: {{ .Values.monolith.service.targetPort }}
           initialDelaySeconds: 15
           periodSeconds: 20
+          timeoutSeconds: 60
       restartPolicy: Always
       imagePullSecrets:
         - name: dockerconfigjson

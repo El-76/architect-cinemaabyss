@@ -5,7 +5,7 @@ global:
 
 # Image pull secrets
 imagePullSecrets:
-  dockerconfigjson: ewoJImF1dGhzIjogewoJCSJnaGNyLmlvIjogewoJCQkiYXV0aCI6
+  dockerconfigjson: ewogICAgImF1dGhzIjogewogICAgICAgICJnaGNyLmlvIjogewogICAgICAgICAgICAiYXV0aCI6ICJaV3d0TnpZNloyaHdYMmxDYzBjMmRrOTNVMEZRVERFNE9XUm9lRzFzYlVWME1UQmhSRWxhWVRKbmNFTTJTZz09IgogICAgICAgIH0KICAgIH0KfQo=
 # Database configuration
 database:
   host: postgres
@@ -22,7 +22,7 @@ database:
       cpu: 1000m
       memory: 1Gi
     requests:
-      cpu: 500m
+      cpu: 100m
       memory: 512Mi
   persistence:
     enabled: true
@@ -33,7 +33,7 @@ database:
 monolith:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/monolith
+    repository: ghcr.io/el-76/architect-cinemaabyss/monolith
     tag: latest
     pullPolicy: Always
   replicas: 1
@@ -53,7 +53,7 @@ monolith:
 proxyService:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/proxy-service
+    repository: ghcr.io/el-76/architect-cinemaabyss/proxy-service
     tag: latest
     pullPolicy: Always
   replicas: 1
@@ -73,7 +73,7 @@ proxyService:
 moviesService:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/movies-service
+    repository: ghcr.io/el-76/architect-cinemaabyss/movies-service
     tag: latest
     pullPolicy: Always
   replicas: 1
@@ -93,7 +93,7 @@ moviesService:
 eventsService:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/events-service
+    repository: ghcr.io/el-76/architect-cinemaabyss/events-service
     tag: latest
     pullPolicy: Always
   replicas: 1
@@ -122,7 +122,7 @@ kafka:
       cpu: 1000m
       memory: 1Gi
     requests:
-      cpu: 200m
+      cpu: 100m
       memory: 512Mi
   persistence:
     enabled: true
@@ -169,10 +169,18 @@ ingress:
   hosts:
     - host: cinemaabyss.example.com
       paths:
-        - path: /
+        - path: /api/
+          pathType: Prefix
+          service: monolith
+          port: 8080
+        - path: /health
           pathType: Prefix
           service: proxy-service
-          port: 80
+          port: 8000
+        - path: /api/movies
+          pathType: Prefix
+          service: proxy-service
+          port: 8000
         - path: /api/events
           pathType: Prefix
           service: events-service
@@ -182,4 +190,4 @@ ingress:
 config:
   # Strangler Fig configuration
   gradualMigration: "true"
-  moviesMigrationPercent: "100"
+  moviesMigrationPercent: "25"

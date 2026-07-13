@@ -1,0 +1,13 @@
+#!/bin/sh
+
+MONOLITH_MIGRATION_PERCENT=`[[ "$GRADUAL_MIGRATION" == "true" ]] && echo -n $(( 100 - MOVIES_MIGRATION_PERCENT )) || echo -n 0`
+DISABLE_MONOLITH=`[[ "$MONOLITH_MIGRATION_PERCENT" == "0" ]] && echo -n \# || echo -n ' '`
+DISABLE_MOVIES=`[[ "$MONOLITH_MIGRATION_PERCENT" == "100" ]] && echo -n \# || echo -n ' '`
+MONOLITH_HOST_PORT=`echo -n $MONOLITH_URL | sed 's/^http:\/\/\(.*\)$/\1/g'`
+MOVIES_SERVICE_HOST_PORT=`echo -n $MOVIES_SERVICE_URL | sed 's/^http:\/\/\(.*\)$/\1/g'`
+
+export MONOLITH_MIGRATION_PERCENT
+export DISABLE_MONOLITH
+export DISABLE_MOVIES
+export MONOLITH_HOST_PORT
+export MOVIES_SERVICE_HOST_PORT

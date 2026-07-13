@@ -1,0 +1,122 @@
+@startuml Microservices
+
+title Cinema Abyss Microservices Container Diagram
+
+!include <C4/C4_Component>
+
+Person(User, "User", "A user of the system")
+Person(Admin, "Administrator", "An administrator managing the system")
+
+System_Boundary(WarmhouseSystem, "Warmhouse System", "System managing, issuing commands to and collecting data from temperature sensors") {
+    Container(WebUI, "Web UI", "Microfrontend", "Web browser client")
+    Container(SmartTVUI, "Smart TV UI", "Application", "Smart TV client")
+    Container(MobileUI, "Mobile UI", "Application", "Mobile client")
+
+    Container(WebUIBFF, "Web UI BFF")
+    Container(SmartTVUIBFF, "Smart TV UI BFF")
+    Container(MobileUIBFF, "Mobile UI BFF")
+
+    Container(WebAdminUI, "Web Admin UI", "Microfrontend", "Admin user interface")
+
+    Container(WebAdminUIBFF, "Web Admin UI BFF")
+
+    Container(APIGateway, "API Gateway", "Service", "API gateway")
+
+    Container(UserRepositoryService, "User Repository Service", "Service", "Holds user entities, performs CRUD operations")
+    ContainerDb(UserRepositoryDatabase, "User Database", "Service", "Holds user data")
+    
+    Container(MovieRepositoryService, "Movie Repository Service", "Service", "Holds movie entities, performs CRUD operations")
+    ContainerDb(MovieRepositoryDatabase, "Movie Database", "Service", "Holds movie data")
+
+    Container(PaymentService, "Payment Service", "Service", "Interacts with payment gateway, maintains payment states")
+    ContainerDb(PaymentDatabase, "Payment Database", "Service", "Holds payments state etc")
+
+    Container(SubscriptionRepositoryService, "Subscription Repository Service", "Service", "Holds subscription entities, performs CRUD operations")
+    ContainerDb(SubscriptionRepositoryDatabase, "Subscription Database", "Service", "Holds subscription data")
+
+    Container(ReviewRepositoryService, "Review Repository Service", "Service", "Holds review entities, performs CRUD operations")
+    ContainerDb(ReviewRepositoryDatabase, "Review Database", "Service", "Holds review data")
+
+    Container(RecommendationService, "Recommendation Service", "Service", "Interacts with external recommendation system, recalculates and stores recommendations")
+    ContainerDb(RecommendationDatabase, "Recommendation Database", "Service", "Holds current recommendations.")
+
+    Container(UsageHistoryService, "Usage History Service", "Service", "Holds usage history, primarily to be passed to recommendations service")
+    ContainerDb(UsageHistoryRepositoryDatabase, "Usage History Database", "Service", "Holds usage history data")
+
+    ContainerDb(MessageQueueeExt, "RabbitMQ", "Service", "Exchanges with external recommendation engine")
+    ContainerDb(MessageQueuee, "Kafka", "Service", "Passes subscription payments etc")
+}
+
+System_Ext(PaymentAPI, "Payment API", "External payment gateway")
+System_Ext(RecommendationAPI, "Recommendation API", "External recommendation API")
+
+Rel(User, WebUI, "Uses the system")
+Rel(User, SmartTVUI, "Uses the system")
+Rel(User, MobileUI, "Uses the system")
+
+Rel(WebUI, APIGateway, "Calls")
+Rel(SmartTVUI, APIGateway, "Calls")
+Rel(MobileUI, APIGateway, "Calls")
+
+Rel(APIGateway, WebUIBFF, "Calls")
+Rel(APIGateway, SmartTVUIBFF, "Calls")
+Rel(APIGateway, MobileUIBFF, "Calls")
+
+Rel(Admin, WebAdminUI, "Manages the system")
+
+Rel(WebAdminUI, APIGateway, "Calls")
+
+Rel(APIGateway, WebAdminUIBFF, "Calls")
+
+Rel(WebUIBFF, UserRepositoryService, "Calls")
+Rel(WebUIBFF, MovieRepositoryService, "Calls")
+Rel(WebUIBFF, PaymentService, "Calls")
+Rel(WebUIBFF, SubscriptionRepositoryService, "Calls")
+Rel(WebUIBFF, ReviewRepositoryService, "Calls")
+Rel(WebUIBFF, RecommendationService, "Calls")
+Rel(WebUIBFF, UsageHistoryService, "Calls")
+
+Rel(SmartTVUIBFF, UserRepositoryService, "Calls")
+Rel(SmartTVUIBFF, MovieRepositoryService, "Calls")
+Rel(SmartTVUIBFF, PaymentService, "Calls")
+Rel(SmartTVUIBFF, SubscriptionRepositoryService, "Calls")
+Rel(SmartTVUIBFF, ReviewRepositoryService, "Calls")
+Rel(SmartTVUIBFF, RecommendationService, "Calls")
+Rel(SmartTVUIBFF, UsageHistoryService, "Calls")
+
+Rel(MobileUIBFF, UserRepositoryService, "Calls")
+Rel(MobileUIBFF, MovieRepositoryService, "Calls")
+Rel(MobileUIBFF, PaymentService, "Calls")
+Rel(MobileUIBFF, SubscriptionRepositoryService, "Calls")
+Rel(MobileUIBFF, ReviewRepositoryService, "Calls")
+Rel(MobileUIBFF, RecommendationService, "Calls")
+Rel(MobileUIBFF, UsageHistoryService, "Calls")
+
+Rel(UserRepositoryService, UserRepositoryDatabase, "Uses")
+Rel(MovieRepositoryService, MovieRepositoryDatabase, "Uses")
+Rel(PaymentService, PaymentDatabase, "Uses")
+Rel(SubscriptionRepositoryService, SubscriptionRepositoryDatabase, "Uses")
+Rel(ReviewRepositoryService, ReviewRepositoryDatabase, "Uses")
+Rel(RecommendationService, RecommendationDatabase, "Uses")
+Rel(UsageHistoryService, UsageHistoryRepositoryDatabase, "Uses")
+
+Rel(WebAdminUIBFF, UserRepositoryService, "Calls")
+Rel(WebAdminUIBFF, MovieRepositoryService, "Calls")
+Rel(WebAdminUIBFF, PaymentService, "Calls")
+Rel(WebAdminUIBFF, SubscriptionRepositoryService, "Calls")
+Rel(WebAdminUIBFF, ReviewRepositoryService, "Calls")
+Rel(WebAdminUIBFF, RecommendationService, "Calls")
+Rel(WebAdminUIBFF, UsageHistoryService, "Calls")
+
+Rel(RecommendationService, UsageHistoryService, "Calls")
+BiRel(RecommendationService, MessageQueueeExt, "Publishes requests to update recommendations, receives updated recommendations")
+
+BiRel(RecommendationAPI, MessageQueueeExt, "Receives data, publishes recommendations")
+
+Rel(MessageQueuee, SubscriptionRepositoryService, "Recives payment status and updates subscription status")
+Rel(PaymentService, MessageQueuee, "Publishes subscription payment status")
+
+Rel(PaymentService, PaymentAPI, "Interacts with payment API")
+
+
+@enduml

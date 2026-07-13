@@ -1,5 +1,17 @@
 ## Изучите [README.md](README.md) файл и структуру проекта.
 
+---
+
+#### Важно
+
+* Переменная MOVIES_MIGRATION_PERCENT везде выставлена в 25
+* Попытался победить конфликтующие Cluster ID в Kafka и Zookeeper изменением mount точки каталога с данными Zookeeper (выглядит так, что был подмонтирован неверный каталог и данные терялись при рестарте), системно не тестировал этот момент
+* URL'ы proxy /api/movies/health и /health возвращают 200 - это не совсем честно, но зато тесты полностью зелёные :)
+* Я тестирую на виртуальной машине на ноутбуке, поэтому для k8s requests были уменьшены до 100m, а в helm параметр timeoutSeconds в readinessProbe и livenessProbe был выставлен в 60
+* В events-service много дублирования кода, эта проблема осознана, но не исправлена
+
+---
+
 ## Задание 1
 
 1. Спроектируйте to be архитектуру КиноБездны, разделив всю систему на отдельные домены и организовав интеграционное взаимодействие и единую точку вызова сервисов.
@@ -7,6 +19,15 @@
 Добавьте ссылку на файл в этот шаблон
 [ссылка на файл](ссылка)
 
+---
+
+* Сервиса видео с контентом нет тк предполагалось, что это сайт-агрегатор - плеер будет или эмбеддиться в страницу или пользователь уйдёт на внешний ресурс - данные для этого есть у сервиса movies
+* Асинхронное взаимодействие есть с сервисом обработки платежей
+* Клиенты общаются с микросервисами через общий API Gateway, данные для каждого готовит свой собственный BFF
+
+![Диаграмма контейнеров](./schemas/png/Container/Microservices.png)
+
+---
 
 ## Задание 2
 
@@ -59,6 +80,60 @@
 Необходимые тесты для проверки этого API вызываются при запуске npm run test:local из папки tests/postman 
 Приложите скриншот тестов и скриншот состояния топиков Kafka http://localhost:8090 
 
+---
+
+* Proxy представляет собой nginx, конфигурация которого генерируется, используя переменные окружения, для балансировки используется параметр weight
+* Сервисы monolith и movies-service модифицированы так, чтобы они добавляли заголовок X-Server-Name в ответ - так видно, какой сервис за proxy обслужил запрос
+
+#### Проверка ответа proxy
+
+```
+curl -i http://localhost:8000/api/movies 2>&1
+```
+![Результаты тестирования proxy](./resources/2_1.png)
+
+![Результаты тестирования proxy](./resources/2_2.png)
+
+Результаты тестирования плавного переключения командой
+
+```
+for I in {1..100}; do curl -i http://localhost:8000/api/movies 2>&1 | fgrep X-Server-Name; done | sort | uniq -c
+```
+
+![Результаты тестирования proxy](./resources/2_3.png)
+
+#### Тесты
+
+Запускаем тесты с сервисом events
+
+```
+npm run test:local
+```
+![Результаты запуска автотестов](./resources/2_4.png)
+
+Смотрим состояние топиков
+
+Список
+
+![Список топиков](./resources/2_5.png)
+
+movie-events
+
+![Список топиков](./resources/2_6.png)
+
+payment-events
+
+![Список топиков](./resources/2_7.png)
+
+user-events
+
+![Список топиков](./resources/2_8.png)
+
+Логи events-service - видно, что сервис публикует и читает события:
+
+![Логи events-service](./resources/2_9.png)
+
+---
 
 ## Задание 3
 
@@ -274,6 +349,52 @@ cat .docker/config.json | base64
 #### Шаг 3
 Добавьте сюда скриншота вывода при вызове https://cinemaabyss.example.com/api/movies и  скриншот вывода event-service после вызова тестов.
 
+---
+
+#### CI-CD пайплайн
+
+[Результаты работы pipeline](https://github.com/El-76/architect-cinemaabyss/actions)
+
+Пример:
+
+![Результаты работы pipeline](./resources/3_1.png)
+
+#### Состояние подов кластера
+
+![Состояние подов кластера](./resources/3_2.png)
+
+#### Проверка ответа proxy
+
+```
+curl -i http://cinemaabyss.example.com/api/movies 2>&1
+```
+
+![Результаты тестирования proxy](./resources/3_3.png)
+
+![Результаты тестирования proxy](./resources/3_4.png)
+
+Результаты тестирования плавного переключения командой
+
+```
+for I in {1..100}; do curl -i http://cinemaabyss.example.com/api/movies 2>&1 | fgrep X-Server-Name; done | sort | uniq -c
+```
+
+![Результаты тестирования proxy](./resources/3_5.png)
+
+#### Тесты
+
+Запускаем тесты с сервисом events
+
+```
+npm run test:kubernetes
+```
+![Результаты запуска автотестов](./resources/3_6.png)
+
+Логи events-service - видно, что сервис публикует и читает события:
+
+![Логи events-service](./resources/3_7.png)
+
+---
 
 ## Задание 4
 Для простоты дальнейшего обновления и развертывания вам как архитектуру необходимо так же реализовать helm-чарты для прокси-сервиса и проверить работу 
@@ -349,6 +470,44 @@ minikube tunnel
 https://cinemaabyss.example.com/api/movies
 и приложите скриншот развертывания helm и вывода https://cinemaabyss.example.com/api/movies
 
+---
+
+#### Развертывание helm и cостояние подов кластера
+
+![helm и cостояние подов кластера](./resources/4_1.png)
+
+#### Проверка ответа proxy
+
+```
+curl -i http://cinemaabyss.example.com/api/movies 2>&1
+```
+
+![Результаты тестирования proxy](./resources/4_2.png)
+
+![Результаты тестирования proxy](./resources/4_3.png)
+
+Результаты тестирования плавного переключения командой
+
+```
+for I in {1..100}; do curl -i http://cinemaabyss.example.com/api/movies 2>&1 | fgrep X-Server-Name; done | sort | uniq -c
+```
+
+![Результаты тестирования proxy](./resources/4_4.png)
+
+#### Тесты
+
+Запускаем тесты с сервисом events
+
+```
+npm run test:kubernetes
+```
+![Результаты запуска автотестов](./resources/4_5.png)
+
+Логи events-service - видно, что сервис публикует и читает события:
+
+![Логи events-service](./resources/4_6.png)
+
+---
 
 # Задание 5
 Компания планирует активно развиваться и для повышения надежности, безопасности, реализации сетевых паттернов типа Circuit Breaker и канареечного деплоя вам как архитектору необходимо развернуть istio и настроить circuit breaker для monolith и movies сервисов.
@@ -422,3 +581,19 @@ kubectl delete namespace istio-system
 kubectl delete all --all -n cinemaabyss
 kubectl delete namespace cinemaabyss
 ```
+---
+
+#### Fortio
+
+* Тк машина очень слабая, fortio запускался с -timeout 5s и то помогло не до конца - много status code = -1
+* По условию задачи нужно было настроить circuit breaker для movies-service и monolith, настройки circuit breaker отличаются, скриншотов два
+
+movies-service
+
+![movies-service](./resources/5_1.png)
+
+monolith
+
+![monolith](./resources/5_2.png)
+
+---
