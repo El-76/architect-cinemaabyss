@@ -5,6 +5,11 @@
 #### Важно
 
 * Переменная MOVIES_MIGRATION_PERCENT везде выставлена в 25
+* Попытался победить конфликтующие Cluster ID в Kafka и Zookeeper изменением mount точки каталога с данными Zookeeper (выглядит так, что был подмонтирован неверный каталог и данные терялись при рестарте), системно не тестировал этот момент
+* URL'ы proxy /api/movies/health и /health возвращают 200 - это не совсем честно, но зато тесты полностью зелёные :)
+* Я тестирую на виртуальной машине на ноутбуке, поэтому для k8s requests были уменьшены до 100m, а в helm параметр timeoutSeconds в readinessProbe и livenessProbe был выставлен в 60
+
+---
 
 ## Задание 1
 
@@ -20,6 +25,8 @@
 * Клиенты общаются с микросервисами через общий API Gateway, данные для каждого готовит свой собственный BFF
 
 ![Диаграмма контейнеров](./schemas/png/Container/Microservices.png)
+
+---
 
 ## Задание 2
 
@@ -124,6 +131,8 @@ user-events
 Логи events-service - видно, что сервис публикует и читает события:
 
 ![Логи events-service](./resources/2_9.png)
+
+---
 
 ## Задание 3
 
@@ -384,6 +393,8 @@ npm run test:kubernetes
 
 ![Логи events-service](./resources/3_7.png)
 
+---
+
 ## Задание 4
 Для простоты дальнейшего обновления и развертывания вам как архитектуру необходимо так же реализовать helm-чарты для прокси-сервиса и проверить работу 
 
@@ -495,6 +506,8 @@ npm run test:kubernetes
 
 ![Логи events-service](./resources/4_6.png)
 
+---
+
 # Задание 5
 Компания планирует активно развиваться и для повышения надежности, безопасности, реализации сетевых паттернов типа Circuit Breaker и канареечного деплоя вам как архитектору необходимо развернуть istio и настроить circuit breaker для monolith и movies сервисов.
 
@@ -567,3 +580,19 @@ kubectl delete namespace istio-system
 kubectl delete all --all -n cinemaabyss
 kubectl delete namespace cinemaabyss
 ```
+---
+
+#### Fortio
+
+* Тк машина очень слабая, fortio запускался с -timeout 5s и то помогло не до конца - много status code = -1
+* По условию задачи нужно было настроить circuit breaker для movies-service и monolith, настройки circuit breaker отличаются, скриншотов два
+
+movies-service
+
+![movies-service](./resources/5_1.png)
+
+monolith
+
+![monolith](./resources/5_2.png)
+
+---
