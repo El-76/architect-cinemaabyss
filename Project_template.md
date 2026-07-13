@@ -92,8 +92,6 @@ curl -i http://localhost:8000/api/movies 2>&1
 for I in {1..100}; do curl -i http://localhost:8000/api/movies 2>&1 | fgrep X-Server-Name; done | sort | uniq -c
 ```
 
-см. ниже:
-
 ![Результаты тестирования proxy](./resources/2_3.png)
 
 #### Тесты
@@ -371,8 +369,6 @@ curl -i http://cinemaabyss.example.com/api/movies 2>&1
 for I in {1..100}; do curl -i http://cinemaabyss.example.com/api/movies 2>&1 | fgrep X-Server-Name; done | sort | uniq -c
 ```
 
-см. ниже:
-
 ![Результаты тестирования proxy](./resources/3_5.png)
 
 #### Тесты
@@ -462,6 +458,42 @@ minikube tunnel
 https://cinemaabyss.example.com/api/movies
 и приложите скриншот развертывания helm и вывода https://cinemaabyss.example.com/api/movies
 
+---
+
+#### Развертывание helm и cостояние подов кластера
+
+![helm и cостояние подов кластера](./resources/4_1.png)
+
+#### Проверка ответа proxy
+
+```
+curl -i http://cinemaabyss.example.com/api/movies 2>&1
+```
+
+![Результаты тестирования proxy](./resources/4_2.png)
+
+![Результаты тестирования proxy](./resources/4_3.png)
+
+Результаты тестирования плавного переключения командой
+
+```
+for I in {1..100}; do curl -i http://cinemaabyss.example.com/api/movies 2>&1 | fgrep X-Server-Name; done | sort | uniq -c
+```
+
+![Результаты тестирования proxy](./resources/4_4.png)
+
+#### Тесты
+
+Запускаем тесты с сервисом events
+
+```
+npm run test:kubernetes
+```
+![Результаты запуска автотестов](./resources/4_5.png)
+
+Логи events-service - видно, что сервис публикует и читает события:
+
+![Логи events-service](./resources/4_6.png)
 
 # Задание 5
 Компания планирует активно развиваться и для повышения надежности, безопасности, реализации сетевых паттернов типа Circuit Breaker и канареечного деплоя вам как архитектору необходимо развернуть istio и настроить circuit breaker для monolith и movies сервисов.
